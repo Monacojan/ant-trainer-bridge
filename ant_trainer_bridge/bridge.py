@@ -515,6 +515,7 @@ def run_ant(self):
             name="status-publisher",
             daemon=True,
         ).start()
+
     def close(self):
         self.stop.set()
         try:
