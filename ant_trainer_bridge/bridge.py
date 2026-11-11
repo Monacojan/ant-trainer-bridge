@@ -442,30 +442,7 @@ class Bridge:
                     )
                     self.stop.wait(1)
 
-    def run_ant(self):
-        from openant.easy.node import Node
-        from openant.devices import ANTPLUS_NETWORK_KEY
-        from openant.devices.fitness_equipment import FitnessEquipment
-        from openant.devices.heart_rate import HeartRate, HeartRateData
-
-        LOG.info(
-            "Starting passive ANT+ listeners; trainer id=%s hr id=%s",
-            self.o["ant_device_id"],
-            self.o["hr_device_id"],
-        )
-        node = open_ant_node(Node)
-        node.set_network_key(0x00, ANTPLUS_NETWORK_KEY)
-        trainer = FitnessEquipment(node, device_id=int(self.o["ant_device_id"]))
-        hr = HeartRate(node, device_id=int(self.o["hr_device_id"]))
-
-        # Root was needed only to claim/detach the USB device. From this point
-        # onward the process is permanently unprivileged.
-        self.connect()
-        threading.Thread(
-            target=self.status_loop,
-            name="status-publisher",
-            daemon=True,
-        ).start()
+    
 
         def on_trainer_found():
             LOG.info("ANT+ fitness equipment found: device_id=%s", trainer.device_id)
@@ -514,7 +491,30 @@ class Bridge:
                 except Exception:
                     LOG.exception("Error closing ANT+ channel")
             stop_ant_node(node)
+def run_ant(self):
+        from openant.easy.node import Node
+        from openant.devices import ANTPLUS_NETWORK_KEY
+        from openant.devices.fitness_equipment import FitnessEquipment
+        from openant.devices.heart_rate import HeartRate, HeartRateData
 
+        LOG.info(
+            "Starting passive ANT+ listeners; trainer id=%s hr id=%s",
+            self.o["ant_device_id"],
+            self.o["hr_device_id"],
+        )
+        node = open_ant_node(Node)
+        node.set_network_key(0x00, ANTPLUS_NETWORK_KEY)
+        trainer = FitnessEquipment(node, device_id=int(self.o["ant_device_id"]))
+        hr = HeartRate(node, device_id=int(self.o["hr_device_id"]))
+
+        # Root was needed only to claim/detach the USB device. From this point
+        # onward the process is permanently unprivileged.
+        self.connect()
+        threading.Thread(
+            target=self.status_loop,
+            name="status-publisher",
+            daemon=True,
+        ).start()
     def close(self):
         self.stop.set()
         try:
